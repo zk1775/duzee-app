@@ -1,0 +1,8 @@
+name = "duzee-api"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "duzee-db"
+database_id = "0c177ec4-0f7c-4ca9-96f9-e337b82a4382"
