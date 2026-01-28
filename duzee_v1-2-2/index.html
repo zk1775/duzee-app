@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Duzee — Bill Tracker</title>
+  <meta name="description" content="Duzee — a lightweight bill tracker for due dates, recurring payments, and monthly totals." />
+  <link rel="stylesheet" href="./app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar__inner">
+      <div class="brand">
+        <div class="brand__mark" aria-hidden="true">D</div>
+        <div class="brand__text">
+          <div class="brand__name">Duzee</div>
+          <div class="brand__tag">Know what’s due. Before it’s due.</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <label class="control">
+          <span class="control__label">Month</span>
+          <input id="monthInput" type="month" />
+        </label>
+
+        <button id="addBtn" class="btn btn--primary">Add bill</button>
+
+        <div class="menu">
+          <button id="menuBtn" class="btn btn--ghost" aria-haspopup="true" aria-expanded="false">More ▾</button>
+          <div id="menuPanel" class="menu__panel" role="menu">
+            <button id="exportBtn" class="menu__item" role="menuitem">Export data (JSON)</button>
+            <label class="menu__item menu__file" role="menuitem">
+              Import data (JSON)
+              <input id="importInput" type="file" accept="application/json" />
+            </label>
+            <button id="demoBtn" class="menu__item" role="menuitem">Load demo data</button>
+            <button id="resetBtn" class="menu__item menu__item--danger" role="menuitem">Reset (wipe local data)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="summary">
+      <div class="summary__card">
+        <div class="kpi">
+          <div class="kpi__label">Unpaid total</div>
+          <div id="kpiUnpaid" class="kpi__value">$0</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi__label">Paid total</div>
+          <div id="kpiPaid" class="kpi__value">$0</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi__label">Bills</div>
+          <div id="kpiCount" class="kpi__value">0</div>
+        </div>
+      </div>
+
+      <div class="summary__card">
+        <div class="filters">
+          <button class="pill pill--active" data-filter="all" type="button">All</button>
+          <button class="pill" data-filter="unpaid" type="button">Unpaid</button>
+          <button class="pill" data-filter="paid" type="button">Paid</button>
+          <button class="pill" data-filter="autopay" type="button">Autopay</button>
+        </div>
+
+        <div class="sort">
+          <label class="control">
+            <span class="control__label">Sort</span>
+            <select id="sortSelect">
+              <option value="dueDay">Due day</option>
+              <option value="amountDesc">Amount (high → low)</option>
+              <option value="amountAsc">Amount (low → high)</option>
+              <option value="nameAsc">Name (A → Z)</option>
+            </select>
+          </label>
+
+          <label class="control">
+            <span class="control__label">Search</span>
+            <input id="searchInput" type="search" placeholder="Rent, Netflix…" />
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section__head">
+        <h2 class="section__title">Pre‑15th</h2>
+        <div class="section__meta"><span id="preCount">0</span> bills • <span id="preTotal">$0</span></div>
+      </div>
+      <div id="preList" class="grid"></div>
+    </section>
+
+    <section class="section">
+      <div class="section__head">
+        <h2 class="section__title">Post‑15th</h2>
+        <div class="section__meta"><span id="postCount">0</span> bills • <span id="postTotal">$0</span></div>
+      </div>
+      <div id="postList" class="grid"></div>
+    </section>
+
+    <section class="section section--muted">
+      <div class="section__head">
+        <h2 class="section__title">Insights</h2>
+        <div class="section__meta" id="insightsMeta">—</div>
+      </div>
+      <div id="insights" class="insights"></div>
+    </section>
+  </main>
+
+  <dialog id="billDialog" class="dialog">
+    <form id="billForm" method="dialog" class="dialog__form">
+      <div class="dialog__head">
+        <div>
+          <div id="dialogTitle" class="dialog__title">Add bill</div>
+          <div class="dialog__sub">Bills are stored locally in your browser.</div>
+        </div>
+        <button type="button" id="closeDialogBtn" class="iconbtn" aria-label="Close">✕</button>
+      </div>
+
+      <input type="hidden" id="billId" />
+
+      <div class="dialog__grid">
+        <label class="field">
+          <span class="field__label">Name</span>
+          <input id="nameInput" required maxlength="60" placeholder="Rent" />
+        </label>
+
+        <label class="field">
+          <span class="field__label">Amount</span>
+          <input id="amountInput" required type="number" min="0" step="0.01" placeholder="1200" />
+        </label>
+
+        <label class="field">
+          <span class="field__label">Due day (1–31)</span>
+          <input id="dueDayInput" required type="number" min="1" max="31" step="1" placeholder="1" />
+        </label>
+
+        <label class="field">
+          <span class="field__label">Category</span>
+          <input id="categoryInput" maxlength="40" placeholder="Housing, Utilities…" />
+        </label>
+
+        <label class="field field--row">
+          <input id="autopayInput" type="checkbox" />
+          <span class="field__label">Autopay</span>
+        </label>
+
+        <label class="field field--full">
+          <span class="field__label">Notes</span>
+          <textarea id="notesInput" rows="3" maxlength="220" placeholder="Any details…"></textarea>
+        </label>
+      </div>
+
+      <div class="dialog__actions">
+        <button id="saveBtn" class="btn btn--primary" value="save">Save</button>
+        <button class="btn btn--ghost" value="cancel">Cancel</button>
+      </div>
+    </form>
+  </dialog>
+
+  <template id="billCardTpl">
+    <article class="card">
+      <div class="card__top">
+        <div class="card__name"></div>
+        <div class="card__amount"></div>
+      </div>
+
+      <div class="card__meta">
+        <span class="chip chip--day"></span>
+        <span class="chip chip--dueflag" style="display:none"></span>
+        <span class="chip chip--cat"></span>
+        <span class="chip chip--auto" title="Autopay">Autopay</span>
+      </div>
+
+      <div class="card__bottom">
+        <button class="btn btn--tiny btn--ghost card__toggle"></button>
+        <div class="card__spacer"></div>
+        <button class="iconbtn card__edit" title="Edit">✎</button>
+        <button class="iconbtn card__del" title="Delete">🗑</button>
+      </div>
+    </article>
+  </template>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
